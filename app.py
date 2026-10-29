@@ -123,5 +123,7 @@ def sitemap() -> FileResponse:
 @app.exception_handler(StarletteHTTPException)
 async def pagina_nao_encontrada(request: Request, exc: StarletteHTTPException) -> HTMLResponse:
     if exc.status_code == 404:
-        return pagina(request, "404.html", title="Página não encontrada | JUPAC")
+        resposta = pagina(request, "404.html", title="Página não encontrada | JUPAC")
+        resposta.status_code = 404
+        return resposta
     return HTMLResponse("Erro inesperado.", status_code=exc.status_code)

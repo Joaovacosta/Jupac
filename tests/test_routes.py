@@ -18,5 +18,5 @@ def test_health_disponivel():
 def test_404_tem_pagina_amigavel():
     with TestClient(app) as client:
         resposta = client.get("/nao-existe")
-        assert resposta.status_code == 200
+        assert resposta.status_code == 404
         assert "não foi encontrada" in resposta.text

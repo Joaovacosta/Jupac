@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section aria-labelledby="titulo-pagina">
+    <p>JUPAC</p>
+    <h1 id="titulo-pagina">{{ title.split(' | ')[0] }}</h1>
+    <p>{{ chamada }}</p>
+    <a href="https://www.instagram.com/jupac.nsa/" rel="noopener noreferrer" target="_blank">
+      Ver perfil oficial no Instagram
+    </a>
+  </section>
+{% endblock %}
