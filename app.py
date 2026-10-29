@@ -1,39 +1,127 @@
-"""Ponto de entrada da aplicação institucional do JUPAC."""
+"""Aplicação institucional do JUPAC."""
 
+import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from fastapi import Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Form, Request, status
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.sessions import SessionMiddleware
 
+from criptografia import verificar_senha
+from db import inicializar
+from model import Evento
+from services.eventos_service import criar_evento, listar_eventos
 
 BASE_DIR = Path(__file__).resolve().parent
+DB_PATH = BASE_DIR / "jupac.db"
 load_dotenv(BASE_DIR / ".env")
+INSTAGRAM_URL = "https://www.instagram.com/jupac.nsa/"
 
-app = FastAPI(
-    title="JUPAC — Juventude Unida na Paz e no Amor de Cristo",
-    description="Site institucional do grupo de jovens JUPAC.",
-    version="0.1.0",
-)
 
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+@asynccontextmanager
+async def ciclo_vida(_: FastAPI):
+    inicializar(DB_PATH)
+    yield
+
+
+app = FastAPI(title="JUPAC", description="Site institucional do JUPAC.", version="1.0.0", lifespan=ciclo_vida)
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET", "troque-esta-chave-em-producao"), https_only=not __debug__, same_site="lax")
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+
+def pagina(request: Request, nome: str, **contexto: object) -> HTMLResponse:
+    return templates.TemplateResponse(request=request, name=nome, context={"instagram_url": INSTAGRAM_URL, **contexto})
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def pagina_inicial(request: Request) -> HTMLResponse:
-    """Renderiza a página inicial institucional."""
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={"title": "JUPAC — Juventude Unida na Paz e no Amor de Cristo"},
-    )
+    return pagina(request, "index.html", title="JUPAC — Juventude Unida na Paz e no Amor de Cristo", eventos=listar_eventos(DB_PATH)[:3])
+
+
+@app.get("/quem-somos", response_class=HTMLResponse, include_in_schema=False)
+def quem_somos(request: Request) -> HTMLResponse:
+    return pagina(request, "sobre.html", title="Quem somos | JUPAC")
+
+
+@app.get("/atividades", response_class=HTMLResponse, include_in_schema=False)
+def atividades(request: Request) -> HTMLResponse:
+    return pagina(request, "atividades.html", title="Atividades | JUPAC")
+
+
+@app.get("/eventos", response_class=HTMLResponse, include_in_schema=False)
+def eventos(request: Request) -> HTMLResponse:
+    return pagina(request, "eventos.html", title="Agenda | JUPAC", eventos=listar_eventos(DB_PATH))
+
+
+@app.get("/galeria", response_class=HTMLResponse, include_in_schema=False)
+def galeria(request: Request) -> HTMLResponse:
+    return pagina(request, "galeria.html", title="Galeria | JUPAC")
+
+
+@app.get("/participar", response_class=HTMLResponse, include_in_schema=False)
+def participar(request: Request) -> HTMLResponse:
+    return pagina(request, "participar.html", title="Como participar | JUPAC")
+
+
+@app.get("/admin/login", response_class=HTMLResponse, include_in_schema=False)
+def login(request: Request) -> HTMLResponse:
+    return pagina(request, "admin/login.html", title="Acesso administrativo | JUPAC")
+
+
+@app.post("/admin/login", include_in_schema=False)
+def efetuar_login(request: Request, usuario: str = Form(), senha: str = Form()) -> RedirectResponse:
+    if usuario == os.getenv("ADMIN_USERNAME") and verificar_senha(senha, os.getenv("ADMIN_PASSWORD_HASH", "")):
+        request.session["admin"] = True
+        return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse("/admin/login?erro=1", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
+def painel(request: Request) -> HTMLResponse:
+    if not request.session.get("admin"):
+        return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+    return pagina(request, "admin/dashboard.html", title="Painel | JUPAC", eventos=listar_eventos(DB_PATH))
+
+
+@app.post("/admin/eventos", include_in_schema=False)
+def cadastrar_evento(request: Request, titulo: str = Form(), descricao: str = Form(), data: str = Form(""), horario: str = Form(""), local: str = Form("")) -> RedirectResponse:
+    if not request.session.get("admin"):
+        return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+    evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None})
+    criar_evento(DB_PATH, evento)
+    return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.post("/admin/sair", include_in_schema=False)
+def sair(request: Request) -> RedirectResponse:
+    request.session.clear()
+    return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.get("/health", tags=["sistema"])
 def verificar_saude() -> dict[str, str]:
-    """Informa que a aplicação está disponível."""
     return {"status": "ok"}
+
+
+@app.get("/robots.txt", include_in_schema=False)
+def robots() -> FileResponse:
+    return FileResponse(BASE_DIR / "robots.txt", media_type="text/plain")
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+def sitemap() -> FileResponse:
+    return FileResponse(BASE_DIR / "sitemap.xml", media_type="application/xml")
+
+
+@app.exception_handler(StarletteHTTPException)
+async def pagina_nao_encontrada(request: Request, exc: StarletteHTTPException) -> HTMLResponse:
+    if exc.status_code == 404:
+        return pagina(request, "404.html", title="Página não encontrada | JUPAC")
+    return HTMLResponse("Erro inesperado.", status_code=exc.status_code)
