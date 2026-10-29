@@ -43,6 +43,21 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
+@app.middleware("http")
+async def cabecalhos_de_seguranca(request: Request, call_next):
+    """Aplica proteções de navegador adequadas ao site público e ao painel."""
+    resposta = await call_next(request)
+    resposta.headers["X-Content-Type-Options"] = "nosniff"
+    resposta.headers["X-Frame-Options"] = "DENY"
+    resposta.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    resposta.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    resposta.headers["Content-Security-Policy"] = (
+        "default-src 'self'; base-uri 'self'; form-action 'self'; "
+        "frame-ancestors 'none'; object-src 'none'; style-src 'self'; script-src 'self'"
+    )
+    return resposta
+
+
 def pagina(request: Request, nome: str, **contexto: object) -> HTMLResponse:
     return templates.TemplateResponse(request=request, name=nome, context={"instagram_url": INSTAGRAM_URL, "csrf_token": obter_token_csrf(request), **contexto})
 

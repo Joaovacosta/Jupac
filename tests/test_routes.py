@@ -15,6 +15,14 @@ def test_health_disponivel():
         assert client.get("/health").json() == {"status": "ok"}
 
 
+def test_respostas_incluem_cabecalhos_de_seguranca():
+    with TestClient(app) as client:
+        resposta = client.get("/")
+        assert resposta.headers["x-content-type-options"] == "nosniff"
+        assert resposta.headers["x-frame-options"] == "DENY"
+        assert "default-src 'self'" in resposta.headers["content-security-policy"]
+
+
 def test_404_tem_pagina_amigavel():
     with TestClient(app) as client:
         resposta = client.get("/nao-existe")

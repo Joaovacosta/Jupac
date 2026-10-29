@@ -37,3 +37,5 @@ pytest
 ## Publicação
 
 Em produção, use uma variável `SESSION_SECRET` longa e exclusiva, HTTPS e um banco gerenciado antes de atender conteúdo de forma permanente. O arquivo `jupac.db` é local e está ignorado pelo Git.
+
+As respostas públicas e administrativas incluem uma política de segurança de conteúdo (CSP), além de cabeçalhos contra incorporação e interpretação indevida de arquivos.
