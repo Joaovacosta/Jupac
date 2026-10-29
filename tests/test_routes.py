@@ -20,3 +20,9 @@ def test_404_tem_pagina_amigavel():
         resposta = client.get("/nao-existe")
         assert resposta.status_code == 404
         assert "não foi encontrada" in resposta.text
+
+
+def test_login_rejeita_formulario_sem_token_csrf():
+    with TestClient(app) as client:
+        resposta = client.post("/admin/login", data={"usuario": "admin", "senha": "senha-invalida"})
+        assert resposta.status_code == 422

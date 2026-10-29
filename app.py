@@ -16,6 +16,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from criptografia import verificar_senha
 from db import inicializar
 from model import Evento
+from sessao import obter_token_csrf, validar_token_csrf
 from services.eventos_service import (
     atualizar_evento,
     buscar_evento,
@@ -43,7 +44,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
 def pagina(request: Request, nome: str, **contexto: object) -> HTMLResponse:
-    return templates.TemplateResponse(request=request, name=nome, context={"instagram_url": INSTAGRAM_URL, **contexto})
+    return templates.TemplateResponse(request=request, name=nome, context={"instagram_url": INSTAGRAM_URL, "csrf_token": obter_token_csrf(request), **contexto})
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
@@ -82,7 +83,8 @@ def login(request: Request) -> HTMLResponse:
 
 
 @app.post("/admin/login", include_in_schema=False)
-def efetuar_login(request: Request, usuario: str = Form(), senha: str = Form()) -> RedirectResponse:
+def efetuar_login(request: Request, usuario: str = Form(), senha: str = Form(), csrf_token: str = Form()) -> RedirectResponse:
+    validar_token_csrf(request, csrf_token)
     if usuario == os.getenv("ADMIN_USERNAME") and verificar_senha(senha, os.getenv("ADMIN_PASSWORD_HASH", "")):
         request.session["admin"] = True
         return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
@@ -97,9 +99,10 @@ def painel(request: Request) -> HTMLResponse:
 
 
 @app.post("/admin/eventos", include_in_schema=False)
-def cadastrar_evento(request: Request, titulo: str = Form(), descricao: str = Form(), data: str = Form(""), horario: str = Form(""), local: str = Form(""), link: str = Form(""), situacao: str = Form("proximo")) -> RedirectResponse:
+def cadastrar_evento(request: Request, titulo: str = Form(), descricao: str = Form(), data: str = Form(""), horario: str = Form(""), local: str = Form(""), link: str = Form(""), situacao: str = Form("proximo"), csrf_token: str = Form()) -> RedirectResponse:
     if not request.session.get("admin"):
         return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+    validar_token_csrf(request, csrf_token)
     evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None, "link": link or None, "situacao": situacao})
     criar_evento(DB_PATH, evento)
     return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
@@ -116,24 +119,27 @@ def formulario_edicao_evento(request: Request, evento_id: int):
 
 
 @app.post("/admin/eventos/{evento_id}/editar", include_in_schema=False)
-def editar_evento(request: Request, evento_id: int, titulo: str = Form(), descricao: str = Form(), data: str = Form(""), horario: str = Form(""), local: str = Form(""), link: str = Form(""), situacao: str = Form("proximo")) -> RedirectResponse:
+def editar_evento(request: Request, evento_id: int, titulo: str = Form(), descricao: str = Form(), data: str = Form(""), horario: str = Form(""), local: str = Form(""), link: str = Form(""), situacao: str = Form("proximo"), csrf_token: str = Form()) -> RedirectResponse:
     if not request.session.get("admin"):
         return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+    validar_token_csrf(request, csrf_token)
     evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None, "link": link or None, "situacao": situacao})
     atualizar_evento(DB_PATH, evento_id, evento)
     return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/admin/eventos/{evento_id}/excluir", include_in_schema=False)
-def excluir_evento_publicado(request: Request, evento_id: int) -> RedirectResponse:
+def excluir_evento_publicado(request: Request, evento_id: int, csrf_token: str = Form()) -> RedirectResponse:
     if not request.session.get("admin"):
         return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+    validar_token_csrf(request, csrf_token)
     excluir_evento(DB_PATH, evento_id)
     return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/admin/sair", include_in_schema=False)
-def sair(request: Request) -> RedirectResponse:
+def sair(request: Request, csrf_token: str = Form()) -> RedirectResponse:
+    validar_token_csrf(request, csrf_token)
     request.session.clear()
     return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
 
