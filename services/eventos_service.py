@@ -14,6 +14,12 @@ def listar_eventos(caminho_db: Path) -> list[Evento]:
     return [Evento.model_validate(dict(linha)) for linha in linhas]
 
 
+def buscar_evento(caminho_db: Path, evento_id: int) -> Evento | None:
+    with conectar(caminho_db) as conexao:
+        linha = conexao.execute("SELECT * FROM eventos WHERE id = ?", (evento_id,)).fetchone()
+    return Evento.model_validate(dict(linha)) if linha else None
+
+
 def criar_evento(caminho_db: Path, evento: Evento) -> Evento:
     dados = evento.model_dump(exclude={"id"}, mode="json")
     with conectar(caminho_db) as conexao:
@@ -29,4 +35,17 @@ def excluir_evento(caminho_db: Path, evento_id: int) -> bool:
     """Remove um evento existente e informa se havia conteúdo a excluir."""
     with conectar(caminho_db) as conexao:
         cursor = conexao.execute("DELETE FROM eventos WHERE id = ?", (evento_id,))
+    return cursor.rowcount == 1
+
+
+def atualizar_evento(caminho_db: Path, evento_id: int, evento: Evento) -> bool:
+    dados = evento.model_dump(exclude={"id"}, mode="json")
+    dados["id"] = evento_id
+    with conectar(caminho_db) as conexao:
+        cursor = conexao.execute(
+            """UPDATE eventos SET titulo = :titulo, descricao = :descricao, data = :data,
+               horario = :horario, local = :local, link = :link, situacao = :situacao
+               WHERE id = :id""",
+            dados,
+        )
     return cursor.rowcount == 1

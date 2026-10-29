@@ -16,7 +16,13 @@ from starlette.middleware.sessions import SessionMiddleware
 from criptografia import verificar_senha
 from db import inicializar
 from model import Evento
-from services.eventos_service import criar_evento, excluir_evento, listar_eventos
+from services.eventos_service import (
+    atualizar_evento,
+    buscar_evento,
+    criar_evento,
+    excluir_evento,
+    listar_eventos,
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "jupac.db"
@@ -96,6 +102,25 @@ def cadastrar_evento(request: Request, titulo: str = Form(), descricao: str = Fo
         return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
     evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None})
     criar_evento(DB_PATH, evento)
+    return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.get("/admin/eventos/{evento_id}/editar", response_class=HTMLResponse, include_in_schema=False)
+def formulario_edicao_evento(request: Request, evento_id: int):
+    if not request.session.get("admin"):
+        return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+    evento = buscar_evento(DB_PATH, evento_id)
+    if evento is None:
+        return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
+    return pagina(request, "admin/evento_editar.html", title="Editar evento | JUPAC", evento=evento)
+
+
+@app.post("/admin/eventos/{evento_id}/editar", include_in_schema=False)
+def editar_evento(request: Request, evento_id: int, titulo: str = Form(), descricao: str = Form(), data: str = Form(""), horario: str = Form(""), local: str = Form("")) -> RedirectResponse:
+    if not request.session.get("admin"):
+        return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+    evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None})
+    atualizar_evento(DB_PATH, evento_id, evento)
     return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
 
 
