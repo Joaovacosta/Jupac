@@ -34,3 +34,10 @@ def test_login_rejeita_formulario_sem_token_csrf():
     with TestClient(app) as client:
         resposta = client.post("/admin/login", data={"usuario": "admin", "senha": "senha-invalida"})
         assert resposta.status_code == 422
+
+
+def test_pagina_de_login_mostra_token_csrf():
+    with TestClient(app) as client:
+        resposta = client.get("/admin/login")
+        assert resposta.status_code == 200
+        assert 'name="csrf_token"' in resposta.text

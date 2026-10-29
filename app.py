@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -118,7 +119,10 @@ def cadastrar_evento(request: Request, titulo: str = Form(), descricao: str = Fo
     if not request.session.get("admin"):
         return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
     validar_token_csrf(request, csrf_token)
-    evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None, "link": link or None, "situacao": situacao})
+    try:
+        evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None, "link": link or None, "situacao": situacao})
+    except ValidationError:
+        return RedirectResponse("/admin?erro=evento", status_code=status.HTTP_303_SEE_OTHER)
     criar_evento(DB_PATH, evento)
     return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -138,7 +142,13 @@ def editar_evento(request: Request, evento_id: int, titulo: str = Form(), descri
     if not request.session.get("admin"):
         return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
     validar_token_csrf(request, csrf_token)
-    evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None, "link": link or None, "situacao": situacao})
+    try:
+        evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None, "link": link or None, "situacao": situacao})
+    except ValidationError:
+        return RedirectResponse(
+            f"/admin/eventos/{evento_id}/editar?erro=evento",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
     atualizar_evento(DB_PATH, evento_id, evento)
     return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
 
