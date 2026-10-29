@@ -4,6 +4,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -14,6 +17,18 @@ app = FastAPI(
     description="Site institucional do grupo de jovens JUPAC.",
     version="0.1.0",
 )
+
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def pagina_inicial(request: Request) -> HTMLResponse:
+    """Renderiza a página inicial institucional."""
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"title": "JUPAC — Juventude Unida na Paz e no Amor de Cristo"},
+    )
 
 
 @app.get("/health", tags=["sistema"])
