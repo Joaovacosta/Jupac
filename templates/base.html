@@ -4,16 +4,34 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="JUPAC — Juventude Unida na Paz e no Amor de Cristo.">
+    <meta property="og:title" content="{{ title | default('JUPAC') }}">
+    <meta property="og:description" content="Juventude Unida na Paz e no Amor de Cristo.">
+    <meta property="og:type" content="website">
     <title>{% block title %}{{ title | default('JUPAC') }}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', path='css/base.css') }}">
+    <script src="{{ url_for('static', path='js/main.js') }}" defer></script>
   </head>
   <body>
     <a href="#conteudo" class="pular-conteudo">Pular para o conteúdo principal</a>
     <header class="cabecalho">
-      <a class="marca" href="/" aria-label="Ir para a página inicial do JUPAC">JUPAC</a>
+      <div class="cabecalho__conteudo">
+        <a class="marca" href="/" aria-label="Ir para a página inicial do JUPAC"><span>J</span>UPAC</a>
+        <button class="menu-botao" type="button" aria-expanded="false" aria-controls="menu-principal">Menu</button>
+        <nav id="menu-principal" aria-label="Navegação principal">
+          <a href="/quem-somos">Quem somos</a>
+          <a href="/atividades">Atividades</a>
+          <a href="/eventos">Agenda</a>
+          <a href="/galeria">Galeria</a>
+          <a href="/participar">Participar</a>
+        </nav>
+      </div>
     </header>
     <main id="conteudo">
       {% block content %}{% endblock %}
     </main>
+    <footer class="rodape">
+      <p><strong>JUPAC</strong> · Juventude Unida na Paz e no Amor de Cristo.</p>
+      <a href="{{ instagram_url }}" target="_blank" rel="noopener noreferrer">Instagram oficial</a>
+    </footer>
   </body>
 </html>
