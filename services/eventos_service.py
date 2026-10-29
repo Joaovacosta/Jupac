@@ -23,3 +23,10 @@ def criar_evento(caminho_db: Path, evento: Evento) -> Evento:
             dados,
         )
     return evento.model_copy(update={"id": cursor.lastrowid})
+
+
+def excluir_evento(caminho_db: Path, evento_id: int) -> bool:
+    """Remove um evento existente e informa se havia conteúdo a excluir."""
+    with conectar(caminho_db) as conexao:
+        cursor = conexao.execute("DELETE FROM eventos WHERE id = ?", (evento_id,))
+    return cursor.rowcount == 1
