@@ -1,0 +1,22 @@
+# Segredos e configurações locais
+.env
+.env.*
+!.env.example
+
+# Ambientes Python e artefatos de execução
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ferramentas e sistema operacional
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Arquivos de mídia enviados localmente
+static/assets/uploads/
