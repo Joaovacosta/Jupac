@@ -1,12 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <section aria-labelledby="titulo-principal">
-    <p>Juventude unida na paz e no amor de Cristo</p>
-    <h1 id="titulo-principal">JUPAC</h1>
-    <p>Uma caminhada de fé, amizade e comunidade.</p>
-    <a href="https://www.instagram.com/jupac.nsa/" rel="noopener noreferrer" target="_blank">
-      Acompanhar no Instagram
-    </a>
+  <section class="hero" aria-labelledby="titulo-principal">
+    <div class="hero__texto">
+      <p class="rotulo">Juventude Unida na Paz e no Amor de Cristo</p>
+      <h1 id="titulo-principal">Aqui, a caminhada é compartilhada.</h1>
+      <p class="hero__resumo">Um espaço para jovens se aproximarem de Cristo, construírem amizade e viverem a comunidade.</p>
+      <div class="acoes"><a class="botao" href="/participar">Conheça o JUPAC</a><a class="link-seta" href="{{ instagram_url }}" target="_blank" rel="noopener noreferrer">Instagram oficial ↗</a></div>
+    </div>
+    <div class="hero__arte" aria-hidden="true"><span>✦</span><strong>JUPAC</strong><i>✝</i></div>
+  </section>
+  <section class="introducao" aria-labelledby="proposito">
+    <p class="rotulo">Nossa essência</p><h2 id="proposito">Fé que aproxima. Amizade que permanece.</h2>
+    <p>O JUPAC é Juventude Unida na Paz e no Amor de Cristo. Este site reúne apenas informações confirmadas pelo grupo e abre caminho para quem deseja acompanhar essa caminhada.</p>
+  </section>
+  <section class="faixa" aria-label="Pilares da caminhada"><span>Fé</span><span>Amizade</span><span>Comunidade</span><span>Esperança</span></section>
+  <section class="agenda" aria-labelledby="agenda-titulo"><div><p class="rotulo">Agenda</p><h2 id="agenda-titulo">O que vem por aí</h2></div><a class="link-seta" href="/eventos">Ver agenda completa →</a>
+    {% if eventos %}<div class="eventos-lista">{% for evento in eventos %}<article class="evento"><p>{{ evento.data.strftime('%d/%m/%Y') if evento.data else 'Data a confirmar' }}</p><h3>{{ evento.titulo }}</h3><p>{{ evento.descricao }}</p></article>{% endfor %}</div>{% else %}<p class="vazio">Ainda não há eventos publicados. Acompanhe o Instagram oficial para novidades.</p>{% endif %}
+  </section>
+  <section class="instagram-chamada"><p class="rotulo">Acompanhe de perto</p><h2>O Instagram é nosso canal oficial de novidades.</h2><a class="botao botao--claro" href="{{ instagram_url }}" target="_blank" rel="noopener noreferrer">Ir para @jupac.nsa</a></section>
   </section>
 {% endblock %}
