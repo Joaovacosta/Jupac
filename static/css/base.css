@@ -1,0 +1,72 @@
+:root {
+  --azul-profundo: #102a5f;
+  --azul-jupac: #2451bd;
+  --dourado: #f4c84a;
+  --laranja: #ef7d22;
+  --vinho: #7d1d2a;
+  --creme: #fffaf0;
+  --branco: #ffffff;
+  --tinta: #172033;
+  --sombra: 0 18px 45px rgb(16 42 95 / 12%);
+  --largura-conteudo: 70rem;
+  --fonte-display: "Arial Narrow", "Aptos Display", Impact, sans-serif;
+  --fonte-texto: Inter, Aptos, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 20rem;
+  margin: 0;
+  color: var(--tinta);
+  background: var(--creme);
+  font-family: var(--fonte-texto);
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--dourado);
+  outline-offset: 4px;
+}
+
+.pular-conteudo {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 10;
+  padding: 0.7rem 1rem;
+  color: var(--azul-profundo);
+  background: var(--dourado);
+  border-radius: 0.4rem;
+  transform: translateY(-180%);
+}
+
+.pular-conteudo:focus {
+  transform: translateY(0);
+}
+
+.cabecalho {
+  width: min(100% - 2rem, var(--largura-conteudo));
+  margin: 0 auto;
+  padding: 1.25rem 0;
+}
+
+.marca {
+  color: var(--azul-profundo);
+  font-family: var(--fonte-display);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}

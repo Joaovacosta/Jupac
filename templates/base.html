@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="JUPAC — Juventude Unida na Paz e no Amor de Cristo.">
     <title>{% block title %}{{ title | default('JUPAC') }}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/base.css') }}">
   </head>
   <body>
     <a href="#conteudo" class="pular-conteudo">Pular para o conteúdo principal</a>
-    <header>
-      <a href="/" aria-label="Ir para a página inicial do JUPAC">JUPAC</a>
+    <header class="cabecalho">
+      <a class="marca" href="/" aria-label="Ir para a página inicial do JUPAC">JUPAC</a>
     </header>
     <main id="conteudo">
       {% block content %}{% endblock %}
