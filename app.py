@@ -97,10 +97,10 @@ def painel(request: Request) -> HTMLResponse:
 
 
 @app.post("/admin/eventos", include_in_schema=False)
-def cadastrar_evento(request: Request, titulo: str = Form(), descricao: str = Form(), data: str = Form(""), horario: str = Form(""), local: str = Form("")) -> RedirectResponse:
+def cadastrar_evento(request: Request, titulo: str = Form(), descricao: str = Form(), data: str = Form(""), horario: str = Form(""), local: str = Form(""), link: str = Form(""), situacao: str = Form("proximo")) -> RedirectResponse:
     if not request.session.get("admin"):
         return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
-    evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None})
+    evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None, "link": link or None, "situacao": situacao})
     criar_evento(DB_PATH, evento)
     return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -116,10 +116,10 @@ def formulario_edicao_evento(request: Request, evento_id: int):
 
 
 @app.post("/admin/eventos/{evento_id}/editar", include_in_schema=False)
-def editar_evento(request: Request, evento_id: int, titulo: str = Form(), descricao: str = Form(), data: str = Form(""), horario: str = Form(""), local: str = Form("")) -> RedirectResponse:
+def editar_evento(request: Request, evento_id: int, titulo: str = Form(), descricao: str = Form(), data: str = Form(""), horario: str = Form(""), local: str = Form(""), link: str = Form(""), situacao: str = Form("proximo")) -> RedirectResponse:
     if not request.session.get("admin"):
         return RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
-    evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None})
+    evento = Evento.model_validate({"titulo": titulo, "descricao": descricao, "data": data or None, "horario": horario or None, "local": local or None, "link": link or None, "situacao": situacao})
     atualizar_evento(DB_PATH, evento_id, evento)
     return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
 

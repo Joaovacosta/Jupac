@@ -45,3 +45,11 @@ def test_atualizacao_persiste_dados_validados(tmp_path):
 
     assert atualizar_evento(caminho_db, criado.id or 0, atualizado) is True
     assert buscar_evento(caminho_db, criado.id or 0).titulo == "Novo encontro"
+
+
+def test_evento_aceita_link_e_situacao():
+    evento = Evento(
+        titulo="Encontro", descricao="Informações confirmadas", link="https://example.org", situacao="cancelado"
+    )
+    assert str(evento.link) == "https://example.org/"
+    assert evento.situacao == "cancelado"
